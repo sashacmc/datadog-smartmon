@@ -8,6 +8,13 @@ class SmartMon(AgentCheck):
         work from a non-privileged id. chmod +s /usr/sbin/smartctl
     """
 
+    def get_assessment_val(self, assessment):
+        if assessment == 'FAIL':
+            return 2
+        if assessment == 'WARN':
+            return 1
+        return 0
+
     def check(self, instance):
         devlist = DeviceList()
         labels = instance.get("labels")
@@ -25,7 +32,7 @@ class SmartMon(AgentCheck):
                 tags.append(f"label:{labels[device.name]}")
 
             # overall pass/fail check
-            self.gauge("smartmon.Assessment", int(device.assessment != 'FAIL'), tags=tags)
+            self.gauge("smartmon.Assessment", self.get_assessment_val(device.assessment), tags=tags)
 
             for attribute in range(len(device.attributes)):
                 if device.attributes[attribute] is not None:
